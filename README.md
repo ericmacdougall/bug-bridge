@@ -130,7 +130,7 @@ bug-bridge/
     popup.*            # Popup UI for repo mapping
     panel.*            # DevTools panel UI
     devtools.*         # DevTools page
-    annotate.*         # Annotation overlay
+    annotate.js        # Annotation overlay (injected programmatically)
     lib/
       repo-mapper.js   # Hostname-to-repo mapping
       har-collector.js # HAR format collector
