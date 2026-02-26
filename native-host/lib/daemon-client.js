@@ -8,7 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync, execFileSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const queue = require('./queue');
 
 /**
@@ -64,7 +64,7 @@ function isTmuxInstalled() {
  */
 function tmuxSessionExists(sessionName) {
   try {
-    execSync(`tmux has-session -t "${sessionName}" 2>/dev/null`, { stdio: 'pipe' });
+    execFileSync('tmux', ['has-session', '-t', sessionName], { stdio: 'pipe' });
     return true;
   } catch (err) {
     return false;
@@ -77,7 +77,7 @@ function tmuxSessionExists(sessionName) {
  */
 function killTmuxSession(sessionName) {
   try {
-    execSync(`tmux kill-session -t "${sessionName}" 2>/dev/null`, { stdio: 'pipe' });
+    execFileSync('tmux', ['kill-session', '-t', sessionName], { stdio: 'pipe' });
   } catch (err) {
     // Ignore — session may not exist
   }
@@ -140,8 +140,10 @@ function ensureDaemon(repoPath, daemonScriptPath) {
   // Start new daemon inside tmux
   try {
     const nodePath = process.execPath;
-    const cmd = `tmux new-session -d -s "${sessionName}" "${nodePath} ${daemonScriptPath} ${repoPath}"`;
-    execSync(cmd, { stdio: 'pipe' });
+    execFileSync('tmux', [
+      'new-session', '-d', '-s', sessionName,
+      nodePath, daemonScriptPath, repoPath
+    ], { stdio: 'pipe' });
 
     // Give the daemon a moment to start and write its PID
     // The daemon writes its own PID file on startup
@@ -171,7 +173,7 @@ function ensureDaemon(repoPath, daemonScriptPath) {
     // If we couldn't read the PID, try to get it from tmux
     if (!pid) {
       try {
-        const tmuxPid = execSync(`tmux list-panes -t "${sessionName}" -F "#{pane_pid}"`, { stdio: 'pipe' }).toString().trim();
+        const tmuxPid = execFileSync('tmux', ['list-panes', '-t', sessionName, '-F', '#{pane_pid}'], { stdio: 'pipe' }).toString().trim();
         pid = parseInt(tmuxPid, 10) || null;
         if (pid) {
           fs.writeFileSync(pidPath, String(pid), 'utf8');
