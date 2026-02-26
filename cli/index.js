@@ -57,8 +57,9 @@ program
     const extensionDir = path.resolve(path.join(__dirname, '..', 'extension'));
     console.log(`  1. Load the Chrome extension from: ${extensionDir}`);
     console.log('  2. Click the Bug Bridge icon and set your repo path for each site');
-    console.log('  3. Open DevTools on any page to enable full network capture');
-    console.log('  4. Click "Report Bug" to capture context and send to Claude Code');
+    console.log('  3. Add .bug-reports/ to your repo\'s .gitignore');
+    console.log('  4. Open DevTools on any page to enable full network capture');
+    console.log('  5. Click "Report Bug" to capture context and send to Claude Code');
   });
 
 program

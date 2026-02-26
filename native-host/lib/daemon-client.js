@@ -12,6 +12,15 @@ const { execFileSync } = require('child_process');
 const queue = require('./queue');
 
 /**
+ * Synchronous sleep that doesn't burn CPU.
+ * Uses Atomics.wait on a SharedArrayBuffer (no-ops for the given duration).
+ * @param {number} ms - Milliseconds to sleep
+ */
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
  * Gets the PID file path for a repo's daemon.
  * @param {string} repoPath - Absolute path to the repo
  * @returns {string} Path to .daemon.pid
@@ -163,10 +172,7 @@ function ensureDaemon(repoPath, daemonScriptPath) {
           // PID file being written, retry
         }
       }
-      const start = Date.now();
-      while (Date.now() - start < interval) {
-        // Spin wait
-      }
+      sleepSync(interval);
       elapsed += interval;
     }
 
