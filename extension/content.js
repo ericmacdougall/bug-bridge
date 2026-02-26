@@ -10,11 +10,14 @@
   const MAX_ENTRIES = 500;
   const BATCH_INTERVAL = 5000; // 5 seconds
 
-  /** @type {Array<object>} Captured error/warning entries */
+  /** @type {Array<object>} Captured error/warning entries (ring buffer, max MAX_ENTRIES) */
   const capturedErrors = [];
 
+  /** @type {Array<object>} Errors not yet sent to background script */
+  const unsentErrors = [];
+
   /**
-   * Adds an entry to the captured errors array.
+   * Adds an entry to the captured errors array and the unsent queue.
    * @param {object} entry - The error entry to add
    */
   function addEntry(entry) {
@@ -22,6 +25,7 @@
     if (capturedErrors.length > MAX_ENTRIES) {
       capturedErrors.shift(); // FIFO eviction
     }
+    unsentErrors.push(entry);
   }
 
   // Override console.error
@@ -145,16 +149,14 @@
     }
   });
 
-  // Batch send errors to background every 5 seconds
-  let lastSentIndex = 0;
+  // Batch send new errors to background every 5 seconds
   setInterval(() => {
-    if (capturedErrors.length > lastSentIndex) {
-      const newErrors = capturedErrors.slice(lastSentIndex);
-      lastSentIndex = capturedErrors.length;
+    if (unsentErrors.length > 0) {
+      const batch = unsentErrors.splice(0);
       try {
         chrome.runtime.sendMessage({
           action: 'consoleErrorsBatch',
-          errors: newErrors,
+          errors: batch,
           tabUrl: window.location.href
         });
       } catch (e) {

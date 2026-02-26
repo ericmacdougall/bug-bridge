@@ -225,9 +225,8 @@
     canvas.addEventListener('selectstart', (e) => e.preventDefault());
 
     // Keyboard shortcuts
-    document.addEventListener('keydown', function annotateKeyHandler(e) {
+    function annotateKeyHandler(e) {
       if (e.key === 'Escape') {
-        document.removeEventListener('keydown', annotateKeyHandler);
         finalize(true);
       }
       if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
@@ -237,7 +236,8 @@
           redrawCanvas();
         }
       }
-    });
+    }
+    document.addEventListener('keydown', annotateKeyHandler);
 
     // ============================================================
     // Drawing functions
@@ -312,6 +312,8 @@
     // ============================================================
 
     function finalize(cancelled) {
+      document.removeEventListener('keydown', annotateKeyHandler);
+
       if (cancelled) {
         overlay.remove();
         chrome.runtime.sendMessage({ action: 'annotationCancelled' });
