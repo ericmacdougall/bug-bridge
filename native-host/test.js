@@ -256,6 +256,19 @@ function testQueue() {
     // Completed/failed entries preserved
     const q3 = queue.getQueue(tempDir);
     assert(q3.reports.length === 3, 'Completed/failed entries are preserved in queue');
+
+    // Test corrupted queue.json recovery
+    const queuePath2 = path.join(tempDir, '.bug-reports', 'queue.json');
+    fs.writeFileSync(queuePath2, '{invalid json content', 'utf8');
+    const recoveredQueue = queue.getQueue(tempDir);
+    assert(Array.isArray(recoveredQueue.reports), 'Corrupted queue.json recovers to empty queue');
+    assert(recoveredQueue.reports.length === 0, 'Recovered queue has 0 reports');
+
+    // Test queue.json with wrong structure
+    fs.writeFileSync(queuePath2, '{"data": []}', 'utf8');
+    const wrongStructure = queue.getQueue(tempDir);
+    assert(Array.isArray(wrongStructure.reports), 'Wrong structure queue recovers to empty reports');
+    assert(wrongStructure.reports.length === 0, 'Wrong structure queue has 0 reports');
   } finally {
     cleanupDir(tempDir);
   }

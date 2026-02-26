@@ -99,9 +99,25 @@ function readQueue(repoPath) {
   const queuePath = getQueuePath(repoPath);
   try {
     const data = fs.readFileSync(queuePath, 'utf8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    // Validate structure
+    if (!parsed || !Array.isArray(parsed.reports)) {
+      return { reports: [] };
+    }
+    return parsed;
   } catch (err) {
     if (err.code === 'ENOENT') {
+      return { reports: [] };
+    }
+    if (err instanceof SyntaxError) {
+      // Corrupted JSON — back up the corrupted file and start fresh
+      const backupPath = queuePath + '.corrupted.' + Date.now();
+      try {
+        fs.copyFileSync(queuePath, backupPath);
+        process.stderr.write(`Warning: queue.json was corrupted, backed up to ${backupPath}\n`);
+      } catch (e) {
+        // Ignore backup failures
+      }
       return { reports: [] };
     }
     throw new Error(`Failed to read queue: ${err.message}`);

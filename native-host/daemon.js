@@ -200,7 +200,15 @@ async function main() {
       continue;
     }
 
-    const nextReport = queue.getNext(repoPath);
+    let nextReport;
+    try {
+      nextReport = queue.getNext(repoPath);
+    } catch (err) {
+      console.error(`\nError reading queue: ${err.message}`);
+      console.log('Retrying in 5 seconds...');
+      await sleep(5000);
+      continue;
+    }
 
     if (!nextReport) {
       process.stdout.write(`\r\u23F3 Queue empty \u2014 waiting for new bug reports...   `);
@@ -228,17 +236,28 @@ async function main() {
     }
 
     // Process the report
-    queue.markProcessing(repoPath, nextReport.id);
+    try {
+      queue.markProcessing(repoPath, nextReport.id);
+    } catch (err) {
+      console.error(`\nError updating queue: ${err.message}`);
+      await sleep(2000);
+      continue;
+    }
 
     console.log('\u2550'.repeat(59));
     const exitCode = await runClaudeCode(nextReport);
 
-    if (exitCode === 0) {
-      queue.markComplete(repoPath, nextReport.id);
-      lastCompletedDesc = nextReport.description_preview;
-    } else {
-      queue.markFailed(repoPath, nextReport.id, `Claude Code exited with code ${exitCode}`);
-      lastCompletedDesc = `FAILED: ${nextReport.description_preview}`;
+    try {
+      if (exitCode === 0) {
+        queue.markComplete(repoPath, nextReport.id);
+        lastCompletedDesc = nextReport.description_preview;
+      } else {
+        queue.markFailed(repoPath, nextReport.id, `Claude Code exited with code ${exitCode}`);
+        lastCompletedDesc = `FAILED: ${nextReport.description_preview}`;
+      }
+    } catch (err) {
+      console.error(`\nError updating queue after processing: ${err.message}`);
+      lastCompletedDesc = `ERROR: ${nextReport.description_preview}`;
     }
   }
 }

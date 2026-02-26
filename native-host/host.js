@@ -284,6 +284,14 @@ async function handleChunkedConnection() {
  */
 function reassembleAndProcess(bundle, chunks) {
   for (const [field, chunkData] of Object.entries(chunks)) {
+    // Validate all chunks were received (no sparse/missing entries)
+    const received = chunkData.parts.filter(p => p !== undefined).length;
+    if (received !== chunkData.total) {
+      process.stderr.write(`Warning: field "${field}" missing ${chunkData.total - received}/${chunkData.total} chunks\n`);
+      bundle[field] = null;
+      continue;
+    }
+
     const reassembled = chunkData.parts.join('');
 
     // Determine if this field should be a string or parsed JSON
