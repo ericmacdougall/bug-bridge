@@ -12,6 +12,14 @@ const fs = require('fs');
 const path = require('path');
 
 /**
+ * Synchronous sleep that doesn't burn CPU.
+ * @param {number} ms - Milliseconds to sleep
+ */
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
  * Gets the path to the queue file for a repo.
  * @param {string} repoPath - Absolute path to the repo
  * @returns {string} Path to queue.json
@@ -63,10 +71,7 @@ function acquireLock(repoPath) {
           continue;
         }
         const waitTime = Math.min(interval, maxWait - elapsed);
-        const start = Date.now();
-        while (Date.now() - start < waitTime) {
-          // Spin wait
-        }
+        sleepSync(waitTime);
         elapsed += waitTime;
       } else {
         throw err;

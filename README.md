@@ -53,6 +53,14 @@ node cli/index.js init
 
 Each hostname gets its own mapping. You can map multiple hostnames to the same repo (e.g., `localhost:3000` and `staging.myapp.com` both pointing to the same project).
 
+### 4. Add `.bug-reports/` to your repo's `.gitignore`
+
+Bug reports contain screenshots, page source, cookies, and other potentially sensitive data. Add this to each repo's `.gitignore`:
+
+```
+.bug-reports/
+```
+
 ## Reporting a bug
 
 1. **Open the Bug Bridge popup** and click "Report Bug", or use the button in the DevTools panel
