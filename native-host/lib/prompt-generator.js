@@ -60,8 +60,11 @@ ${description}
 
 The following context files are in this directory (\`${relativePath}\`):
 
-- \`screenshot-raw.png\` — Full page screenshot at time of report
 `;
+
+  if (bundle.screenshot_raw) {
+    md += `- \`screenshot-raw.png\` — Full page screenshot at time of report\n`;
+  }
 
   if (hasAnnotated) {
     md += `- \`screenshot-annotated.png\` — Screenshot with user's annotations highlighting the problem area\n`;
