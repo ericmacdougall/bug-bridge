@@ -1,0 +1,397 @@
+/* Bug Bridge Popup Styles — Dark Theme */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 380px;
+  min-height: 300px;
+  max-height: 500px;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  line-height: 1.4;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #16213e;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.header h1 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.header .version {
+  font-size: 11px;
+  color: #888;
+}
+
+/* Section */
+.section {
+  padding: 12px 16px;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+/* Current Site */
+.current-hostname {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.current-mapping {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.current-mapping.active {
+  color: #22c55e;
+}
+
+/* Inputs */
+.input-group {
+  margin-bottom: 8px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 3px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 7px 10px;
+  background: #0f0f23;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-size: 13px;
+  font-family: monospace;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+  border-color: #4f46e5;
+}
+
+.input-group input::placeholder {
+  color: #555;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.input-row .input-group:first-child {
+  flex: 1;
+}
+
+.input-row .input-group:last-child {
+  flex: 0 0 110px;
+}
+
+/* Buttons */
+.btn {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #4f46e5;
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.btn-danger {
+  background: transparent;
+  color: #ef4444;
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-report {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: #22c55e;
+  color: #000;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.btn-report:hover:not(:disabled) {
+  background: #16a34a;
+}
+
+.btn-report:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.btn-small {
+  padding: 4px 8px;
+  font-size: 11px;
+  background: #2a2a4a;
+  color: #ccc;
+  border-radius: 3px;
+}
+
+.btn-small:hover:not(:disabled) {
+  background: #3a3a5a;
+}
+
+/* Actions row */
+.actions-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.actions-row .btn-primary {
+  flex: 0 0 auto;
+}
+
+.save-feedback {
+  font-size: 12px;
+  color: #22c55e;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.save-feedback.visible {
+  opacity: 1;
+}
+
+/* Validation */
+.input-error {
+  font-size: 11px;
+  color: #ef4444;
+  margin-top: 3px;
+  display: none;
+}
+
+.input-warning {
+  font-size: 11px;
+  color: #eab308;
+  margin-top: 3px;
+  display: none;
+}
+
+/* Recent repos */
+.recent-list {
+  list-style: none;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #222;
+}
+
+.recent-item:last-child {
+  border-bottom: none;
+}
+
+.recent-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recent-label {
+  font-weight: 600;
+  font-size: 12px;
+  color: #e0e0e0;
+}
+
+.recent-hostname {
+  font-size: 11px;
+  color: #666;
+  margin-left: 6px;
+}
+
+.recent-path {
+  font-size: 11px;
+  color: #555;
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.empty-state {
+  font-size: 12px;
+  color: #555;
+  font-style: italic;
+  padding: 8px 0;
+}
+
+/* Status indicators */
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.green {
+  background: #22c55e;
+}
+
+.status-dot.red {
+  background: #ef4444;
+}
+
+.status-dot.yellow {
+  background: #eab308;
+}
+
+.status-text {
+  color: #aaa;
+}
+
+/* Queue section */
+.queue-section {
+  display: none;
+}
+
+.queue-section.visible {
+  display: block;
+}
+
+.queue-status {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 8px;
+}
+
+.btn-terminal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #2a2a4a;
+  color: #ccc;
+  border: 1px solid #3a3a5a;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.btn-terminal:hover {
+  background: #3a3a5a;
+}
+
+/* Toast (in popup) */
+.toast {
+  position: fixed;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  background: #22c55e;
+  color: #000;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  text-align: center;
+}
+
+.toast.visible {
+  opacity: 1;
+}
+
+/* Report Bug button section */
+.report-section {
+  padding: 12px 16px;
+}
+
+/* Tooltip */
+[title] {
+  position: relative;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}

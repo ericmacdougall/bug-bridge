@@ -1,0 +1,4 @@
+node_modules/
+.bug-reports/
+*.lock
+.daemon.pid

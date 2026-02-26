@@ -1,0 +1,16 @@
+{
+  "name": "bug-bridge",
+  "version": "0.1.0",
+  "description": "Capture full debugging context from any website and send it to Claude Code for automated fixing.",
+  "bin": {
+    "bug-bridge": "./cli/index.js"
+  },
+  "scripts": {
+    "test": "node native-host/test.js"
+  },
+  "keywords": ["chrome-extension", "debugging", "claude-code", "native-messaging"],
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.0.0"
+  }
+}

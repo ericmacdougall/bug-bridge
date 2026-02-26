@@ -1,0 +1,191 @@
+/* Bug Bridge Annotation Overlay Styles */
+
+#bug-bridge-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Toolbar */
+#bug-bridge-toolbar {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  font-size: 12px;
+  user-select: none;
+}
+
+#bug-bridge-toolbar .separator {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Color picker */
+#bug-bridge-toolbar .color-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+#bug-bridge-toolbar .color-btn:hover,
+#bug-bridge-toolbar .color-btn.active {
+  border-color: #fff;
+}
+
+/* Tool buttons */
+#bug-bridge-toolbar .tool-btn {
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+#bug-bridge-toolbar .tool-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#bug-bridge-toolbar .tool-btn.active {
+  background: #4f46e5;
+  border-color: #4f46e5;
+}
+
+/* Width buttons */
+#bug-bridge-toolbar .width-btn {
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 0.2s;
+}
+
+#bug-bridge-toolbar .width-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#bug-bridge-toolbar .width-btn.active {
+  background: #4f46e5;
+  border-color: #4f46e5;
+}
+
+/* Action buttons */
+#bug-bridge-toolbar .action-btn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+#bug-bridge-toolbar .btn-undo {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+#bug-bridge-toolbar .btn-undo:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+#bug-bridge-toolbar .btn-clear-drawing {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+#bug-bridge-toolbar .btn-clear-drawing:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+#bug-bridge-toolbar .btn-done {
+  background: #22c55e;
+  color: #000;
+}
+
+#bug-bridge-toolbar .btn-done:hover {
+  background: #16a34a;
+}
+
+#bug-bridge-toolbar .btn-cancel {
+  background: #ef4444;
+  color: #fff;
+}
+
+#bug-bridge-toolbar .btn-cancel:hover {
+  background: #dc2626;
+}
+
+/* Canvas */
+#bug-bridge-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2147483646;
+  cursor: crosshair;
+}
+
+/* Description input */
+#bug-bridge-description-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483647;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 10px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+#bug-bridge-description-bar textarea {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  padding: 8px 12px;
+  min-height: 60px;
+  max-height: 200px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.4;
+}
+
+#bug-bridge-description-bar textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+#bug-bridge-description-bar textarea:focus {
+  border-color: #4f46e5;
+}
