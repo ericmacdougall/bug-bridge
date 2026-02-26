@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>Bug Bridge</h1>
+    <span class="version">v0.1.0</span>
+  </div>
+
+  <!-- Current Site Section -->
+  <div class="section" id="current-site-section">
+    <div class="section-title">Current Site</div>
+    <div class="current-hostname" id="current-hostname">Loading...</div>
+    <div class="current-mapping" id="current-mapping">Checking...</div>
+
+    <div class="input-group">
+      <label for="repo-path">Repo Path</label>
+      <input type="text" id="repo-path" placeholder="/path/to/your/repo" spellcheck="false">
+      <div class="input-error" id="path-error">Path is required</div>
+      <div class="input-warning" id="path-warning">This doesn't look like an absolute path. Are you sure?</div>
+    </div>
+
+    <div class="input-group">
+      <label for="repo-label">Label (optional)</label>
+      <input type="text" id="repo-label" placeholder="optional label">
+    </div>
+
+    <div class="actions-row">
+      <button class="btn btn-primary" id="save-btn">Save</button>
+      <button class="btn btn-danger" id="remove-btn" style="display:none">Remove</button>
+      <span class="save-feedback" id="save-feedback">&check; Saved</span>
+    </div>
+  </div>
+
+  <!-- Recent Repos Section -->
+  <div class="section" id="recent-section">
+    <div class="section-title">Recent Repos</div>
+    <ul class="recent-list" id="recent-list">
+      <li class="empty-state" id="recent-empty">No repos configured yet. Enter a path above to get started.</li>
+    </ul>
+  </div>
+
+  <!-- Queue & Terminal Section -->
+  <div class="section queue-section" id="queue-section">
+    <div class="section-title">Claude Code</div>
+    <div class="queue-status" id="queue-status">Checking...</div>
+    <button class="btn-terminal" id="terminal-btn" style="display:none">
+      Open Terminal
+    </button>
+  </div>
+
+  <!-- Status Section -->
+  <div class="section" id="status-section">
+    <div class="status-row">
+      <div class="status-dot" id="native-status-dot"></div>
+      <span class="status-text" id="native-status-text">Checking native host...</span>
+    </div>
+    <div class="status-row">
+      <div class="status-dot" id="devtools-status-dot"></div>
+      <span class="status-text" id="devtools-status-text">Checking DevTools...</span>
+    </div>
+  </div>
+
+  <!-- Report Bug Button -->
+  <div class="report-section">
+    <button class="btn-report" id="report-btn" disabled title="Configure a repo path first">Report Bug</button>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="popup-toast"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "bug-bridge-native-host",
+  "version": "0.1.0",
+  "description": "Bug Bridge native messaging host for Claude Code integration",
+  "type": "commonjs",
+  "main": "host.js",
+  "scripts": {
+    "test": "node test.js",
+    "test-daemon": "node test-daemon.js"
+  }
+}
