@@ -110,13 +110,19 @@ Map `localhost:3000` to repo A and `localhost:8080` to repo B, and each runs its
 
 ```bash
 # Register native messaging host with Chrome
-bug-bridge init
+npx bug-bridge init     # or: node cli/index.js init
 
 # Check environment status
-bug-bridge status
+npx bug-bridge status
 
 # Remove native messaging host registration
-bug-bridge uninstall
+npx bug-bridge uninstall
+```
+
+## Testing
+
+```bash
+npm test   # Runs 98 automated tests for the native host
 ```
 
 ## Project structure
