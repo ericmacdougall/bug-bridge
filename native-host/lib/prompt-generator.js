@@ -68,8 +68,15 @@ The following context files are in this directory (\`${relativePath}\`):
   }
 
   md += `- \`console-errors.json\` — ${consoleErrors.length} console errors/warnings captured (${errorCount} errors, ${warnCount} warnings)
-- \`network-full.har\` — Full HAR log of ${totalRequests} network requests
-- \`network-errors.json\` — ${errorRequestCount} failed/errored network requests
+`;
+
+  if (networkHar) {
+    md += `- \`network-full.har\` — Full HAR log of ${totalRequests} network requests\n`;
+  } else {
+    md += `- *(No network HAR captured — DevTools was not open)*\n`;
+  }
+
+  md += `- \`network-errors.json\` — ${errorRequestCount} failed/errored network requests
 - \`cookies.json\` — ${cookieCount} cookies for this domain
 - \`page-source.html\` — Full page HTML source (${pageSizeKb} KB)
 - \`meta.json\` — Browser and viewport metadata
