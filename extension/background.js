@@ -389,7 +389,7 @@ async function sendBundleToNativeHost(bundle) {
     });
 
     // Send metadata (everything except large fields)
-    const largeFields = ['screenshot_raw', 'screenshot_annotated', 'page_source', 'network_har'];
+    const largeFields = ['screenshot_raw', 'screenshot_annotated', 'page_source', 'network_har', 'console_errors', 'network_errors_only', 'cookies'];
     const metaMessage = { ...bundle, _chunked: true };
 
     for (const field of largeFields) {

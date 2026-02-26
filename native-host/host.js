@@ -213,71 +213,6 @@ function handleBugReport(bundle, persistent = false) {
 }
 
 /**
- * Handles a chunked/persistent connection.
- * Reads multiple messages from stdin, reassembles the bundle, then processes it.
- *
- * Protocol:
- * 1. First message: metadata (bundle without large fields, has _chunked: true)
- * 2. Subsequent messages: { _chunk: true, field, index, total, data }
- * 3. Final message: { _chunk_complete: true }
- */
-async function handleChunkedConnection() {
-  let bundle = null;
-  const chunks = {};
-
-  while (true) {
-    let message;
-    try {
-      message = await protocol.readMessage(process.stdin);
-    } catch (err) {
-      // Stream ended or error — if we have a bundle, process it
-      if (bundle) {
-        reassembleAndProcess(bundle, chunks);
-      } else {
-        respond({ success: false, error: `Chunked read error: ${err.message}` }, 1);
-      }
-      return;
-    }
-
-    if (message._chunked) {
-      // First message: the metadata/skeleton bundle
-      bundle = message;
-      delete bundle._chunked;
-    } else if (message._chunk) {
-      // A chunk of a large field
-      const { field, index, total, data } = message;
-      if (!chunks[field]) {
-        chunks[field] = { total, parts: [] };
-      }
-      chunks[field].parts[index] = data;
-    } else if (message._chunk_complete) {
-      // All chunks received — reassemble and process
-      if (bundle) {
-        reassembleAndProcess(bundle, chunks);
-      } else {
-        sendResponse({ success: false, error: 'Received chunk_complete without initial message' });
-        process.exit(1);
-      }
-      return;
-    } else {
-      // Not a chunked message — treat as a regular single message
-      if (message.action === 'ping') {
-        sendResponse({ success: true, version: '0.1.0' });
-        process.exit(0);
-      } else if (message.action === 'status') {
-        handleStatus(message);
-      } else if (message.version === '1') {
-        handleBugReport(message, true);
-      } else {
-        sendResponse({ success: false, error: 'Unknown message format' });
-        process.exit(0);
-      }
-      return;
-    }
-  }
-}
-
-/**
  * Reassembles chunked fields into the bundle and processes it.
  * @param {object} bundle - The skeleton bundle
  * @param {object} chunks - Map of field name to { total, parts[] }
@@ -295,11 +230,12 @@ function reassembleAndProcess(bundle, chunks) {
     const reassembled = chunkData.parts.join('');
 
     // Determine if this field should be a string or parsed JSON
-    if (field === 'network_har') {
+    const jsonFields = ['network_har', 'console_errors', 'network_errors_only', 'cookies'];
+    if (jsonFields.includes(field)) {
       try {
         bundle[field] = JSON.parse(reassembled);
       } catch (err) {
-        bundle[field] = null;
+        bundle[field] = field === 'network_har' ? null : [];
       }
     } else {
       bundle[field] = reassembled;
