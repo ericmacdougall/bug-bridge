@@ -236,16 +236,8 @@ async function handleCapture(message) {
       meta: meta
     };
 
-    // Send to native host
-    const response = await new Promise((resolve) => {
-      chrome.runtime.sendNativeMessage('com.bugbridge.host', bundle, (resp) => {
-        if (chrome.runtime.lastError) {
-          resolve({ success: false, error: chrome.runtime.lastError.message });
-          return;
-        }
-        resolve(resp || { success: false, error: 'No response' });
-      });
-    });
+    // Send to native host (with chunked streaming for large bundles)
+    const response = await sendBundleToNativeHost(bundle);
 
     // Show toast on the page
     if (response.success) {
@@ -339,6 +331,99 @@ async function getPageInfo(tabId) {
  */
 async function getHarDataForTab(tabId) {
   return tabHarData.get(tabId) || null;
+}
+
+/** Maximum size for a single native message (Chrome limit ~1MB) */
+const MAX_NATIVE_MESSAGE_SIZE = 1024 * 1024;
+
+/**
+ * Sends a bug report bundle to the native host.
+ * Uses chunked streaming via connectNative if the bundle exceeds the 1MB limit.
+ * @param {object} bundle - The bug report bundle
+ * @returns {Promise<object>} The native host response
+ */
+async function sendBundleToNativeHost(bundle) {
+  const json = JSON.stringify(bundle);
+  const size = Buffer.byteLength ? Buffer.byteLength(json, 'utf8') : json.length * 2;
+
+  if (size <= MAX_NATIVE_MESSAGE_SIZE) {
+    // Small enough for single message
+    return new Promise((resolve) => {
+      chrome.runtime.sendNativeMessage('com.bugbridge.host', bundle, (resp) => {
+        if (chrome.runtime.lastError) {
+          resolve({
+            success: false,
+            error: `Native host error: ${chrome.runtime.lastError.message}. Run \`npx bug-bridge init\` to set up.`
+          });
+          return;
+        }
+        resolve(resp || { success: false, error: 'No response from native host' });
+      });
+    });
+  }
+
+  // Large bundle — use chunked streaming via connectNative
+  return new Promise((resolve) => {
+    let responded = false;
+    const port = chrome.runtime.connectNative('com.bugbridge.host');
+
+    port.onMessage.addListener((response) => {
+      if (!responded) {
+        responded = true;
+        try { port.disconnect(); } catch (e) { /* ignore */ }
+        resolve(response);
+      }
+    });
+
+    port.onDisconnect.addListener(() => {
+      if (!responded) {
+        responded = true;
+        const error = chrome.runtime.lastError
+          ? chrome.runtime.lastError.message
+          : 'Native host disconnected';
+        resolve({
+          success: false,
+          error: `Native host error: ${error}. Run \`npx bug-bridge init\` to set up.`
+        });
+      }
+    });
+
+    // Send metadata (everything except large fields)
+    const largeFields = ['screenshot_raw', 'screenshot_annotated', 'page_source', 'network_har'];
+    const metaMessage = { ...bundle, _chunked: true };
+
+    for (const field of largeFields) {
+      if (metaMessage[field]) {
+        metaMessage[field] = null;
+        metaMessage[`_has_${field}`] = true;
+      }
+    }
+    port.postMessage(metaMessage);
+
+    // Send each large field as chunks
+    const chunkSize = 900 * 1024; // Stay under 1MB per chunk
+    for (const field of largeFields) {
+      if (bundle[field]) {
+        const value = typeof bundle[field] === 'string'
+          ? bundle[field]
+          : JSON.stringify(bundle[field]);
+        const totalChunks = Math.ceil(value.length / chunkSize);
+
+        for (let i = 0; i < totalChunks; i++) {
+          port.postMessage({
+            _chunk: true,
+            field,
+            index: i,
+            total: totalChunks,
+            data: value.substring(i * chunkSize, (i + 1) * chunkSize)
+          });
+        }
+      }
+    }
+
+    // Signal completion
+    port.postMessage({ _chunk_complete: true });
+  });
 }
 
 /**

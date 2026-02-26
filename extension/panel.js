@@ -258,6 +258,18 @@ function checkPanelQueueStatus() {
 setInterval(checkPanelQueueStatus, 10000);
 checkPanelQueueStatus();
 
+// Check initial mapping to set button state
+chrome.runtime.sendMessage({ action: 'getCurrentTabMapping', tabId }, (response) => {
+  if (chrome.runtime.lastError) return;
+  if (!response || !response.mapping) {
+    panelReportBtn.disabled = true;
+    panelReportBtn.title = 'Configure a repo path in the Bug Bridge popup first';
+  } else {
+    panelReportBtn.disabled = false;
+    panelReportBtn.title = '';
+  }
+});
+
 // ============================================================
 // Buttons
 // ============================================================

@@ -5,6 +5,9 @@
  *
  * Short-lived process: Chrome spawns it for each message.
  * Reads a message from stdin, processes it, writes a response to stdout, and exits.
+ *
+ * Also supports persistent connections (connectNative) for chunked streaming
+ * of large bundles that exceed Chrome's 1MB per-message limit.
  */
 
 'use strict';
@@ -25,6 +28,14 @@ const daemonClient = require('./lib/daemon-client');
 function respond(response, exitCode = 0) {
   protocol.writeMessage(process.stdout, response);
   process.exit(exitCode);
+}
+
+/**
+ * Sends a response without exiting (for persistent connections).
+ * @param {object} response - The response object to send
+ */
+function sendResponse(response) {
+  protocol.writeMessage(process.stdout, response);
 }
 
 /**
@@ -103,18 +114,22 @@ function handleStatus(message) {
 /**
  * Handles a bug report bundle message.
  * @param {object} bundle - The bug report bundle
+ * @param {boolean} [persistent=false] - If true, don't exit after responding
  */
-function handleBugReport(bundle) {
+function handleBugReport(bundle, persistent = false) {
   const repoPath = bundle.repo_path;
+  const respondFn = persistent ? sendResponse : respond;
 
   // Validate repo_path
   if (!repoPath) {
-    respond({ success: false, error: 'No repo_path in message. Update Bug Bridge extension.' });
+    respondFn({ success: false, error: 'No repo_path in message. Update Bug Bridge extension.' });
+    if (persistent) process.exit(0);
     return;
   }
 
   if (!fs.existsSync(repoPath) || !fs.statSync(repoPath).isDirectory()) {
-    respond({ success: false, error: `Repo path does not exist: ${repoPath}` });
+    respondFn({ success: false, error: `Repo path does not exist: ${repoPath}` });
+    if (persistent) process.exit(0);
     return;
   }
 
@@ -123,7 +138,8 @@ function handleBugReport(bundle) {
   try {
     writeResult = fileWriter.writeBundle(bundle);
   } catch (err) {
-    respond({ success: false, error: `Failed to write files: ${err.message}` });
+    respondFn({ success: false, error: `Failed to write files: ${err.message}` });
+    if (persistent) process.exit(0);
     return;
   }
 
@@ -131,7 +147,8 @@ function handleBugReport(bundle) {
   try {
     promptGenerator.writePrompt(bundle, writeResult.dir, repoPath);
   } catch (err) {
-    respond({ success: false, error: `Failed to generate prompt: ${err.message}` });
+    respondFn({ success: false, error: `Failed to generate prompt: ${err.message}` });
+    if (persistent) process.exit(0);
     return;
   }
 
@@ -145,7 +162,8 @@ function handleBugReport(bundle) {
       url: (bundle.meta && bundle.meta.url) || 'unknown'
     });
   } catch (err) {
-    respond({ success: false, error: `Failed to enqueue report: ${err.message}` });
+    respondFn({ success: false, error: `Failed to enqueue report: ${err.message}` });
+    if (persistent) process.exit(0);
     return;
   }
 
@@ -177,7 +195,7 @@ function handleBugReport(bundle) {
   const tmuxAttachCommand = daemonClient.getTmuxAttachCommand(repoPath);
 
   // Step 5: Respond
-  respond({
+  respondFn({
     success: true,
     report_dir: writeResult.dir,
     files_written: writeResult.filesWritten,
@@ -190,16 +208,144 @@ function handleBugReport(bundle) {
     },
     errors: writeResult.errors.length > 0 ? writeResult.errors : undefined
   });
+
+  if (persistent) process.exit(0);
+}
+
+/**
+ * Handles a chunked/persistent connection.
+ * Reads multiple messages from stdin, reassembles the bundle, then processes it.
+ *
+ * Protocol:
+ * 1. First message: metadata (bundle without large fields, has _chunked: true)
+ * 2. Subsequent messages: { _chunk: true, field, index, total, data }
+ * 3. Final message: { _chunk_complete: true }
+ */
+async function handleChunkedConnection() {
+  let bundle = null;
+  const chunks = {};
+
+  while (true) {
+    let message;
+    try {
+      message = await protocol.readMessage(process.stdin);
+    } catch (err) {
+      // Stream ended or error — if we have a bundle, process it
+      if (bundle) {
+        reassembleAndProcess(bundle, chunks);
+      } else {
+        respond({ success: false, error: `Chunked read error: ${err.message}` }, 1);
+      }
+      return;
+    }
+
+    if (message._chunked) {
+      // First message: the metadata/skeleton bundle
+      bundle = message;
+      delete bundle._chunked;
+    } else if (message._chunk) {
+      // A chunk of a large field
+      const { field, index, total, data } = message;
+      if (!chunks[field]) {
+        chunks[field] = { total, parts: [] };
+      }
+      chunks[field].parts[index] = data;
+    } else if (message._chunk_complete) {
+      // All chunks received — reassemble and process
+      if (bundle) {
+        reassembleAndProcess(bundle, chunks);
+      } else {
+        sendResponse({ success: false, error: 'Received chunk_complete without initial message' });
+        process.exit(1);
+      }
+      return;
+    } else {
+      // Not a chunked message — treat as a regular single message
+      if (message.action === 'ping') {
+        sendResponse({ success: true, version: '0.1.0' });
+        process.exit(0);
+      } else if (message.action === 'status') {
+        handleStatus(message);
+      } else if (message.version === '1') {
+        handleBugReport(message, true);
+      } else {
+        sendResponse({ success: false, error: 'Unknown message format' });
+        process.exit(0);
+      }
+      return;
+    }
+  }
+}
+
+/**
+ * Reassembles chunked fields into the bundle and processes it.
+ * @param {object} bundle - The skeleton bundle
+ * @param {object} chunks - Map of field name to { total, parts[] }
+ */
+function reassembleAndProcess(bundle, chunks) {
+  for (const [field, chunkData] of Object.entries(chunks)) {
+    const reassembled = chunkData.parts.join('');
+
+    // Determine if this field should be a string or parsed JSON
+    if (field === 'network_har') {
+      try {
+        bundle[field] = JSON.parse(reassembled);
+      } catch (err) {
+        bundle[field] = null;
+      }
+    } else {
+      bundle[field] = reassembled;
+    }
+  }
+
+  // Clean up marker fields
+  for (const key of Object.keys(bundle)) {
+    if (key.startsWith('_has_')) {
+      delete bundle[key];
+    }
+  }
+
+  handleBugReport(bundle, true);
 }
 
 /**
  * Main entry point.
+ * Detects whether this is a single-message or persistent connection.
  */
 async function main() {
   try {
     const message = await protocol.readMessage(process.stdin);
 
-    // Route based on message type
+    // Check if this is the start of a chunked connection
+    if (message._chunked) {
+      // Re-process this first message and continue reading chunks
+      const bundle = message;
+      delete bundle._chunked;
+      const chunks = {};
+
+      while (true) {
+        let nextMessage;
+        try {
+          nextMessage = await protocol.readMessage(process.stdin);
+        } catch (err) {
+          reassembleAndProcess(bundle, chunks);
+          return;
+        }
+
+        if (nextMessage._chunk) {
+          const { field, index, total, data } = nextMessage;
+          if (!chunks[field]) {
+            chunks[field] = { total, parts: [] };
+          }
+          chunks[field].parts[index] = data;
+        } else if (nextMessage._chunk_complete) {
+          reassembleAndProcess(bundle, chunks);
+          return;
+        }
+      }
+    }
+
+    // Route based on message type (single-message mode)
     if (message.action === 'ping') {
       handlePing();
     } else if (message.action === 'status') {

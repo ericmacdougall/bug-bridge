@@ -603,6 +603,102 @@ function testHostStatus() {
 }
 
 // ============================================================
+// Test: host.js chunked/streaming protocol
+// ============================================================
+
+function testHostChunked() {
+  return new Promise((resolve) => {
+    console.log('\n=== Testing host.js — chunked streaming ===');
+
+    const tempDir = createTempDir();
+    const hostPath = path.join(__dirname, 'host.js');
+    const bundle = createMockBundle(tempDir);
+
+    const child = spawn(process.execPath, [hostPath], {
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+
+    // Send chunked: first the metadata with large fields nulled out
+    const largeFields = ['screenshot_raw', 'screenshot_annotated', 'page_source', 'network_har'];
+    const metaMessage = { ...bundle, _chunked: true };
+
+    for (const field of largeFields) {
+      if (metaMessage[field]) {
+        metaMessage[field] = null;
+        metaMessage[`_has_${field}`] = true;
+      }
+    }
+
+    // Write metadata
+    child.stdin.write(protocol.encodeMessage(metaMessage));
+
+    // Write each large field as a single chunk
+    for (const field of largeFields) {
+      if (bundle[field]) {
+        const value = typeof bundle[field] === 'string'
+          ? bundle[field]
+          : JSON.stringify(bundle[field]);
+
+        child.stdin.write(protocol.encodeMessage({
+          _chunk: true,
+          field,
+          index: 0,
+          total: 1,
+          data: value
+        }));
+      }
+    }
+
+    // Signal completion
+    child.stdin.write(protocol.encodeMessage({ _chunk_complete: true }));
+    child.stdin.end();
+
+    let stdout = Buffer.alloc(0);
+    child.stdout.on('data', (chunk) => {
+      stdout = Buffer.concat([stdout, chunk]);
+    });
+
+    let stderr = '';
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on('exit', (code) => {
+      if (stderr) {
+        console.log(`  stderr: ${stderr}`);
+      }
+
+      assert(code === 0, 'host.js exits with code 0 for chunked bug report');
+
+      if (stdout.length >= 4) {
+        try {
+          const response = protocol.decodeMessage(stdout);
+          assert(response.success === true, `Chunked response success: ${response.success} (error: ${response.error || 'none'})`);
+          assert(response.report_dir && response.report_dir.includes('.bug-reports'), 'Chunked response includes report_dir');
+          assert(response.files_written > 0, `Chunked files written: ${response.files_written}`);
+
+          // Verify files on disk
+          if (response.report_dir && fs.existsSync(response.report_dir)) {
+            const files = fs.readdirSync(response.report_dir);
+            assert(files.includes('screenshot-raw.png'), 'Chunked: screenshot-raw.png exists');
+            assert(files.includes('page-source.html'), 'Chunked: page-source.html exists');
+            assert(files.includes('network-full.har'), 'Chunked: network-full.har exists');
+            assert(files.includes('prompt.md'), 'Chunked: prompt.md exists');
+          }
+        } catch (err) {
+          assert(false, `Chunked response parsing failed: ${err.message}`);
+        }
+      } else {
+        assert(false, 'No response received from chunked host.js');
+      }
+
+      cleanupDir(tempDir);
+      resolve();
+    });
+  });
+}
+
+// ============================================================
 // Run all tests
 // ============================================================
 
@@ -618,6 +714,7 @@ async function runAll() {
   await testHostPing();
   await testHostBugReport();
   await testHostStatus();
+  await testHostChunked();
 
   console.log('\n=========================================');
   console.log(`Results: ${passed} passed, ${failed} failed`);
