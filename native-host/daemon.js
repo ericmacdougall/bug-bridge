@@ -91,8 +91,7 @@ function runClaudeCode(report) {
 
     const child = spawn('claude', ['-p', prompt], {
       cwd: repoPath,
-      stdio: 'inherit',
-      shell: true
+      stdio: 'inherit'
     });
 
     child.on('error', (err) => {
