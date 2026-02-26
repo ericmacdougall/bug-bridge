@@ -125,18 +125,12 @@ bug-bridge uninstall
 bug-bridge/
   extension/           # Chrome extension (Manifest V3)
     manifest.json
-    background.js      # Service worker
-    content.js         # Console error capture
-    popup.*            # Popup UI for repo mapping
-    panel.*            # DevTools panel UI
-    devtools.*         # DevTools page
+    background.js      # Service worker — capture orchestration, native messaging
+    content.js         # Console error capture + toast notifications
+    popup.*            # Popup UI for repo mapping + capture trigger
+    panel.*            # DevTools panel UI with network monitoring
+    devtools.*         # DevTools page — creates panel, tracks open/close
     annotate.js        # Annotation overlay (injected programmatically)
-    lib/
-      repo-mapper.js   # Hostname-to-repo mapping
-      har-collector.js # HAR format collector
-      messaging.js     # Native messaging wrapper
-      capture.js       # Capture orchestrator
-      storage-keys.js  # Storage constants
     icons/
   native-host/         # Native messaging host
     host.js            # Short-lived message handler
