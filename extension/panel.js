@@ -150,26 +150,8 @@ function storeHarInBackground() {
 // ============================================================
 
 function fetchConsoleErrors() {
-  try {
-    chrome.devtools.inspectedWindow.eval(
-      `(function() {
-        return new Promise(function(resolve) {
-          chrome.runtime.sendMessage({ action: 'getConsoleErrors' }, function(response) {
-            resolve(response && response.errors ? response.errors : []);
-          });
-        });
-      })()`,
-      { useContentScriptContext: true },
-      (result, error) => {
-        // This approach may not work — fall back to direct tab message
-      }
-    );
-  } catch (e) {
-    // Ignore
-  }
-
-  // More reliable: ask background to relay
   chrome.runtime.sendMessage({ action: 'getConsoleErrorsForTab', tabId }, (response) => {
+    if (chrome.runtime.lastError) return;
     if (response && response.errors) {
       consoleErrors = response.errors;
       updateConsoleErrorsList();
