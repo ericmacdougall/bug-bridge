@@ -344,7 +344,7 @@ const MAX_NATIVE_MESSAGE_SIZE = 1024 * 1024;
  */
 async function sendBundleToNativeHost(bundle) {
   const json = JSON.stringify(bundle);
-  const size = Buffer.byteLength ? Buffer.byteLength(json, 'utf8') : json.length * 2;
+  const size = new Blob([json]).size;
 
   if (size <= MAX_NATIVE_MESSAGE_SIZE) {
     // Small enough for single message
