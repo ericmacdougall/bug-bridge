@@ -141,7 +141,6 @@ bug-bridge/
       prompt-generator.js
       queue.js         # File-based report queue
       daemon-client.js # Daemon lifecycle management
-      terminal.js      # tmux utilities
   cli/                 # Setup CLI
     index.js
     lib/
